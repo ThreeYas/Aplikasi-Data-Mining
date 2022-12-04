@@ -3,8 +3,11 @@ import streamlit as st
 import pandas as pd
 # mengimpor paket numpy kemudian diberi nama alias np
 import numpy as np
+import joblib
 # min max scaler untuk normalisasi
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
 # library untuk Gaussian Naive Bayes
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
@@ -101,15 +104,17 @@ with preprocessing:
     st.dataframe(X)
 
     st.write("""
-            Mengubah kolom *rata_rata_overdue* menjadi tipe data numerik
+            Mengubah kolom rata_rata_overdue menjadi tipe data numerik
             
-            Memisahkan kolom numerik berdasarkan *rentan hari*
+            Memisahkan kolom numerik berdasarkan rentan hari
 
-            ```
+            
             # Rentan Hari
             [0 - 30 hari, 31 - 45 hari, 46 - 60 hari, 61 - 90 hari, > 90 hari]
-            ```
+            
             """)
+
+    st.write("Join adalah fungsi bawaan yang digunakan untuk menggabungkan atau menggabungkan DataFrame yang berbeda")
 
     # memecah setiap kelas pada kolom "rata_rata_overdue" menjadi kolom tersendiri
     split_kolom_overdue = pd.get_dummies(X["rata_rata_overdue"], prefix="overdue")
@@ -118,6 +123,17 @@ with preprocessing:
     # menghapus kolom rata_rata_overdue dari tabel
     X = X.drop(columns = "rata_rata_overdue")
 
+    st.write("""
+            Kemudian normalisasi kolom 
+
+            Memisahkan kolom numerik berdasarkan "YA" atau "TIDAK"
+
+            
+            # Value kpr_aktif
+            # ['YA', 'TIDAK']
+            
+            """)
+
     # memecah setiap kelas pada kolom "kpr_aktif" menjadi kolom tersendiri
     split_kolom_kpr = pd.get_dummies(X["kpr_aktif"], prefix="KPR")
     X = X.join(split_kolom_kpr)
@@ -125,7 +141,7 @@ with preprocessing:
     # menghapus kolom kpr_aktif dari tabel
     X = X.drop(columns = "kpr_aktif")
 
-    st.write("menampilkan dataframe dimana rata-rata overdue, risk rating dan kpr aktif sudah di hapus dari data")
+    st.write("Dataframe rata-rata overdue, risk rating dan kpr aktif sudah di hapus dari data")
     st.dataframe(X)
 
     st.write(" ## Normalisasi ")
@@ -194,3 +210,67 @@ with preprocessing:
     
     st.write("Menampilkan Y")
     st.write(y)
+
+with modeling:
+    st.write("# Modeling")
+    naivebayes,decisiontree,k_n_n = st.tabs(["Gaussian Naive Bayes", "Decision Tree", "KNN"])
+
+    with naivebayes:
+
+        gnb = joblib.load('gnb.pkl')
+        Y_pred_gnb = gnb.predict(X_test)
+        accuracy_gnb = round(accuracy_score(y_test,Y_pred_gnb)* 100, 2)
+        label_gnb = pd.DataFrame(
+                data={"Label Test" : y_test, "Label Predict" : Y_pred_gnb})
+        st.success(f"Akurasi terhadap data test = {accuracy_gnb}")
+        st.dataframe(label_gnb)
+
+    with decisiontree:
+
+        dtr = joblib.load('dtr.pkl')
+        Y_pred_dtr= dtr.predict(X_test)
+        accuracy_tree = round(accuracy_score(y_test,Y_pred_dtr)* 100, 2) 
+        label_tree = pd.DataFrame(
+                data={"Label Test" : y_test, "Label Predict" : Y_pred_dtr})
+        st.success(f"Akurasi terhadap data test = {accuracy_tree}")
+        st.dataframe(label_tree)
+
+    with k_n_n:
+
+        knn1 = joblib.load('knn1.pkl')
+        Y_pred_knn = knn1.predict(X_test)
+        accuracy_knn = round(accuracy_score(y_test,Y_pred_knn)* 100, 2)
+        label_knn = pd.DataFrame(
+                data={"Label Test" : y_test, "Label Predict" : Y_pred_knn})
+        st.success(f"Akurasi terhadap data test = {accuracy_knn}")
+        st.dataframe(label_knn)
+
+FIRST_IDX=0
+
+with implementasi:
+    st.write("# Implementation")
+    nama_nasabah = st.text_input('Masukkan Nama Nasabah')
+    pendapatan_per_tahun = st.number_input('Masukkan pendapatan pertahun')
+    durasi_peminjaman = st.number_input('Masukkan Durasi Peminjaman')
+    jumlah_tanggungan = st.number_input('Masukkan Jumlah Tanggungan')
+
+    clf = GaussianNB()
+    clf.fit(X, y)
+    clf_pf = GaussianNB()
+    clf_pf.partial_fit(X, y, np.unique(y))
+
+    cek_rasio_NB = st.button('Cek Risk Ratio dengan Naive Bayes')
+    cek_rasio_BNB = st.button('Cek Risk Ratio dengan Bagging Naive Bayes')
+    cek_rasio_DC = st.button('Cek Risk Ratio dengan Bagging Decision Tree')
+
+    if cek_rasio_NB:
+        result_test_naive_bayes = gnb.predict([[0,	0,	0,	0,	0,	0,	1,	pendapatan_per_tahun,	durasi_peminjaman, jumlah_tanggungan]])[FIRST_IDX]
+        st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_test_naive_bayes ,"based on Bagging Gaussian Naive Bayes model")
+    
+    if cek_rasio_BNB:
+        result_test_naive_bayes_bagging = dtr.predict([[0,	0,	0,	0,	0,	0,	1,	pendapatan_per_tahun,	durasi_peminjaman, jumlah_tanggungan]])[FIRST_IDX]
+        st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_test_naive_bayes_bagging ,"based on Bagging Gaussian Naive Bayes model")
+
+    if cek_rasio_DC:
+        result_test_decision_tree = knn1.predict([[0,	0,	0,	0,	0,	0,	1,	pendapatan_per_tahun,	durasi_peminjaman, jumlah_tanggungan]])[FIRST_IDX]
+        st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_test_decision_tree ,"based on Bagging Gaussian Naive Bayes model")
