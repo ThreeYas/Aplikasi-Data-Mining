@@ -248,29 +248,51 @@ with modeling:
 FIRST_IDX=0
 
 with implementasi:
+    indeks_pertama = 0
+    
     st.write("# Implementation")
     nama_nasabah = st.text_input('Masukkan Nama Nasabah')
-    pendapatan_per_tahun = st.number_input('Masukkan pendapatan pertahun')
-    durasi_peminjaman = st.number_input('Masukkan Durasi Peminjaman')
-    jumlah_tanggungan = st.number_input('Masukkan Jumlah Tanggungan')
+    jumlah_gaji = st.number_input('Masukkan pendapatan pertahun')
+    kpr = st.radio("KPR", ("aktif", "tidak aktif"))
+    durasi = st.number_input('Masukkan Durasi Peminjaman')
+    tanggungan = st.number_input('Masukkan Jumlah Tanggungan')
+    overdue = st.selectbox("Overdue", ("0 - 30 days", "31 - 45 days", "46 - 60 days", "61 - 90 days", "> 90 days"))
 
-    clf = GaussianNB()
-    clf.fit(X, y)
-    clf_pf = GaussianNB()
-    clf_pf.partial_fit(X, y, np.unique(y))
+    kpr_ya = 0
+    kpr_tidak = 0
+    if kpr == "aktif":
+        kpr_ya = 1
+    else:
+        kpr_tidak = 1
+        
+    overdue_0=0
+    overdue_31=0
+    overdue_46=0
+    overdue_61=0
+    overdue_91=0
+    if(overdue == "0 - 30 days"):
+        overdues_0 = 1
+    elif(overdue == "31 - 45 days"):
+        overdues_31 = 1
+    elif(overdue == "46 - 60 days"):
+        overdues_46 = 1
+    elif(overdue == "61 - 90 days"):
+        overdues_61 = 1
+    else:
+        overdues_91 = 1
 
-    cek_rasio_NB = st.button('Cek Risk Ratio dengan Naive Bayes')
-    cek_rasio_BNB = st.button('Cek Risk Ratio dengan Bagging Naive Bayes')
-    cek_rasio_DC = st.button('Cek Risk Ratio dengan Bagging Decision Tree')
+    cek_gnb = st.button('Cek Risk Ratio dengan Naive Bayes')
+    cek_tree = st.button('Cek Risk Ratio dengan Decision Tree')
+    cek_knn = st.button('Cek Risk Ratio dengan KNN')
 
-    if cek_rasio_NB:
-        result_test_naive_bayes = gnb.predict([[0,	0,	0,	0,	0,	0,	1,	pendapatan_per_tahun,	durasi_peminjaman, jumlah_tanggungan]])[FIRST_IDX]
-        st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_test_naive_bayes ,"based on Bagging Gaussian Naive Bayes model")
+    if cek_gnb:
+        result_gnb = gnb.predict([[overdue_0,overdue_31,overdue_46,overdue_61,overdue_91, kpr_tidak,kpr_ya,jumlah_gaji,durasi,tanggungan]])[indeks_pertama]
+        st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_gnb ,"based on Gaussian Naive Bayes model")
     
-    if cek_rasio_BNB:
-        result_test_naive_bayes_bagging = dtr.predict([[0,	0,	0,	0,	0,	0,	1,	pendapatan_per_tahun,	durasi_peminjaman, jumlah_tanggungan]])[FIRST_IDX]
-        st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_test_naive_bayes_bagging ,"based on Bagging Gaussian Naive Bayes model")
+    if cek_tree:
+        result_tree = dtr.predict([[overdue_0,overdue_31,overdue_46,overdue_61,overdue_91, kpr_tidak,kpr_ya,jumlah_gaji,durasi,tanggungan]])[indeks_pertama]
+        st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_tree ,"based on Decision Tree model")
 
-    if cek_rasio_DC:
-        result_test_decision_tree = knn1.predict([[0,	0,	0,	0,	0,	0,	1,	pendapatan_per_tahun,	durasi_peminjaman, jumlah_tanggungan]])[FIRST_IDX]
-        st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_test_decision_tree ,"based on Bagging Gaussian Naive Bayes model")
+    if cek_knn:
+        result_knn = knn1.predict([[overdue_0,overdue_31,overdue_46,overdue_61,overdue_91, kpr_tidak,kpr_ya,jumlah_gaji,durasi,tanggungan]])[indeks_pertama]
+        st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_knn ,"based on KNN model")
