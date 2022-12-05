@@ -180,23 +180,6 @@ with preprocessing:
     label_subjek = ["Unnamed: 0",  "kode_kontrak"]
     X = X.drop(columns = label_subjek)
 
-    st.write("dataframe X baru yang tidak ada fitur/kolom unnamed: 0 dan kode kontrak")
-    st.dataframe(X)
-    st.write("## Hitung Data")
-    st.write("- Pisahkan kolom risk rating dari data frame")
-    st.write("- Ambil kolom 'risk rating' sebagai target kolom untuk kategori kelas")
-    st.write("- Pisahkan data latih dengan data tes")
-    st.write("""            Spliting Data
-                data latih (nilai data)
-                X_train 
-                data tes (nilai data)
-                X_test 
-                data latih (kelas data)
-                y_train
-                data tes (kelas data)
-                y_test""")
-
-
     # memisahkan data risk_rating
     X = X.iloc[:, :-1]
     y = data.loc[:, "risk_rating"]
@@ -245,8 +228,6 @@ with modeling:
         st.success(f"Akurasi terhadap data test = {accuracy_knn}")
         st.dataframe(label_knn)
 
-FIRST_IDX=0
-
 with implementasi:
     indeks_pertama = 0
     
@@ -258,41 +239,28 @@ with implementasi:
     tanggungan = st.number_input('Masukkan Jumlah Tanggungan')
     overdue = st.selectbox("Overdue", ("0 - 30 days", "31 - 45 days", "46 - 60 days", "61 - 90 days", "> 90 days"))
 
-    kpr_ya = 0
-    kpr_tidak = 0
-    if kpr == "aktif":
-        kpr_ya = 1
-    else:
-        kpr_tidak = 1
+    kpr_ya = 1 if kpr == "aktif" else 0
+    kpr_tidak = 1 if kpr == "aktif" else 0
         
-    overdue_0=0
-    overdue_31=0
-    overdue_46=0
-    overdue_61=0
-    overdue_91=0
-    if(overdue == "0 - 30 days"):
-        overdues_0 = 1
-    elif(overdue == "31 - 45 days"):
-        overdues_31 = 1
-    elif(overdue == "46 - 60 days"):
-        overdues_46 = 1
-    elif(overdue == "61 - 90 days"):
-        overdues_61 = 1
-    else:
-        overdues_91 = 1
-
+    overdue_0 = 1 if overdue == "0 - 30 days" else 0
+    overdue_31 = 1 if overdue == "31 - 45 days" else 0
+    overdue_46 = 1 if overdue == "46 - 60 days"else 0
+    overdue_61 = 1 if overdue == "61 - 90 days" else 0
+    overdue_91 = 1 if overdue == "> 90 days" else 0
+    
+    data = np.array([[jumlah_gaji, kpr_ya, kpr_tidak, durasi, tanggungan, overdue_0, overdue_31, overdue_46, overdue_61, overdue_91]])
     cek_gnb = st.button('Cek Risk Ratio dengan Naive Bayes')
     cek_tree = st.button('Cek Risk Ratio dengan Decision Tree')
     cek_knn = st.button('Cek Risk Ratio dengan KNN')
 
     if cek_gnb:
-        result_gnb = gnb.predict([[overdue_0,overdue_31,overdue_46,overdue_61,overdue_91, kpr_tidak,kpr_ya,jumlah_gaji,durasi,tanggungan]])[indeks_pertama]
+        result_gnb = gnb.predict(data)[indeks_pertama]
         st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_gnb ,"based on Gaussian Naive Bayes model")
     
     if cek_tree:
-        result_tree = dtr.predict([[overdue_0,overdue_31,overdue_46,overdue_61,overdue_91, kpr_tidak,kpr_ya,jumlah_gaji,durasi,tanggungan]])[indeks_pertama]
+        result_tree = dtr.predict(data)[indeks_pertama]
         st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_tree ,"based on Decision Tree model")
 
     if cek_knn:
-        result_knn = knn1.predict([[overdue_0,overdue_31,overdue_46,overdue_61,overdue_91, kpr_tidak,kpr_ya,jumlah_gaji,durasi,tanggungan]])[indeks_pertama]
+        result_knn = knn1.predict(data)[indeks_pertama]
         st.write(f"Customer Name : ", nama_nasabah,  "has risk rating", result_knn ,"based on KNN model")
